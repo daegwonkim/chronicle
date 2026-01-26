@@ -5,8 +5,7 @@ plugins {
 }
 
 group = "io.github.daegwonkim"
-version = "0.0.1-SNAPSHOT"
-description = "Demo project for Spring Boot"
+version = "0.0.1"
 
 java {
 	toolchain {
@@ -18,10 +17,16 @@ repositories {
 	mavenCentral()
 }
 
-dependencies {
-	implementation("org.springframework.boot:spring-boot-starter")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "org.springframework.boot")
+    apply(plugin = "io.spring.dependency-management")
+
+    dependencies {
+        implementation("org.springframework.boot:spring-boot-starter")
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    }
 }
 
 tasks.withType<Test> {
