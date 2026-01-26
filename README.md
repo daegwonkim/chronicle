@@ -10,6 +10,9 @@ SDK를 통해 애플리케이션에서 발생하는 로그를 손쉽게 중앙 �
 - Database: MySQL 8.0
 - Test & Monitoring: k6, Docker, Prometheus, Grafana
 
+## Architecture
+<img width="1321" height="640" alt="chronicle drawio" src="https://github.com/user-attachments/assets/428a1660-bd51-461e-96f3-0df30b066959" />
+
 ## Component
 
 ### 1. SDK(chronicle-sdk)
