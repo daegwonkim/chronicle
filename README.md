@@ -11,7 +11,7 @@ SDK를 통해 애플리케이션에서 발생하는 로그를 손쉽게 중앙 �
 - Test & Monitoring: k6, Docker, Prometheus, Grafana
 
 ## Architecture
-<img width="1402" height="758" alt="chronicle drawio" src="https://github.com/user-attachments/assets/f2363fea-daf7-4dce-b639-3179aaad678e" />
+<img width="1132" height="758" alt="chronicle drawio" src="https://github.com/user-attachments/assets/2bf7a208-9227-42fe-9ba3-02c618acd696" />
 
 ## Component
 
