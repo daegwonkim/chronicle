@@ -1,4 +1,4 @@
-package io.github.daegwonkim.chronicle;
+package io.github.daegwonkim.chronicleapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
