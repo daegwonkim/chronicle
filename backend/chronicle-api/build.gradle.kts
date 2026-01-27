@@ -1,5 +1,7 @@
 plugins {
     id("java")
+    id("org.springframework.boot") version "4.0.2"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "io.github.daegwonkim"
@@ -10,11 +12,12 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
     // mysql
     runtimeOnly("com.mysql:mysql-connector-j")
-
-    // jdbc
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     // Source: https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1")
