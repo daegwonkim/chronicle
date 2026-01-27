@@ -1,5 +1,6 @@
 CLAUDE.md
 .env
+gradle.properties
 
 .gradle
 build/
