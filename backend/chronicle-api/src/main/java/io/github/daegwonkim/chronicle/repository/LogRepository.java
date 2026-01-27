@@ -1,6 +1,6 @@
-package io.github.daegwonkim.chronicleapi.repository;
+package io.github.daegwonkim.chronicle.repository;
 
-import io.github.daegwonkim.chronicleapi.entity.Log;
+import io.github.daegwonkim.chronicle.entity.Log;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

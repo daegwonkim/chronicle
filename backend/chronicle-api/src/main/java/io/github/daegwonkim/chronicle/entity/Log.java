@@ -1,6 +1,6 @@
-package io.github.daegwonkim.chronicleapi.entity;
+package io.github.daegwonkim.chronicle.entity;
 
-import io.github.daegwonkim.chronicleapi.enumerate.LogLevel;
+import io.github.daegwonkim.chronicle.enumerate.LogLevel;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
