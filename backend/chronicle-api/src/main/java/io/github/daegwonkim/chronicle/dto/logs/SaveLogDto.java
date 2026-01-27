@@ -1,6 +1,6 @@
-package io.github.daegwonkim.chronicleapi.dto.logs;
+package io.github.daegwonkim.chronicle.dto.logs;
 
-import io.github.daegwonkim.chronicleapi.enumerate.LogLevel;
+import io.github.daegwonkim.chronicle.enumerate.LogLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;

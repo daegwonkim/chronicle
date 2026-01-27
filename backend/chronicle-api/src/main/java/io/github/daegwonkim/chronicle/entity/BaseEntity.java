@@ -1,4 +1,4 @@
-package io.github.daegwonkim.chronicleapi.entity;
+package io.github.daegwonkim.chronicle.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

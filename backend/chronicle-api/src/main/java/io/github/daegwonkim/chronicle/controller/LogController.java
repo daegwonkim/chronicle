@@ -1,7 +1,7 @@
-package io.github.daegwonkim.chronicleapi.controller;
+package io.github.daegwonkim.chronicle.controller;
 
-import io.github.daegwonkim.chronicleapi.dto.logs.SaveLogDto;
-import io.github.daegwonkim.chronicleapi.service.LogService;
+import io.github.daegwonkim.chronicle.dto.logs.SaveLogDto;
+import io.github.daegwonkim.chronicle.service.LogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,8 +1,8 @@
-package io.github.daegwonkim.chronicleapi.service;
+package io.github.daegwonkim.chronicle.service;
 
-import io.github.daegwonkim.chronicleapi.dto.logs.SaveLogDto;
-import io.github.daegwonkim.chronicleapi.entity.Log;
-import io.github.daegwonkim.chronicleapi.repository.LogRepository;
+import io.github.daegwonkim.chronicle.dto.logs.SaveLogDto;
+import io.github.daegwonkim.chronicle.entity.Log;
+import io.github.daegwonkim.chronicle.repository.LogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
