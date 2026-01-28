@@ -25,15 +25,19 @@ public class Log {
     @Column(updatable = false, columnDefinition = "TEXT")
     private String message;
 
+    @Column(nullable = false, updatable = false)
+    private String logger;
+
     @Column(name = "logged_at", nullable = false, updatable = false)
     private Instant loggedAt;
 
-    public static Log create(Long appId, LogLevel level, String message, Instant loggedAt) {
+    public static Log create(LogLevel level, String message, String logger, Instant loggedAt) {
         Log log = new Log();
 
-        log.appId = appId;
+        log.appId = 0L;
         log.level = level;
         log.message = message;
+        log.logger = logger;
         log.loggedAt = loggedAt;
 
         return log;
