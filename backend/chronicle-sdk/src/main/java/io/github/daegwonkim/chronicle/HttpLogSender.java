@@ -30,7 +30,7 @@ public class HttpLogSender {
         String json = toJson(entries);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "/api/v1/logs"))
+                .uri(URI.create(url))
                 .header("Content-Type", "application/json")
                 .header("X-App-Key", appKey)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
