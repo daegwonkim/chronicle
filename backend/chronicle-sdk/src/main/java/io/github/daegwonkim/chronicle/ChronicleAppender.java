@@ -14,11 +14,16 @@ public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     private String appKey;
     private String url;
     private int batchSize = 100;
+    private int bufferSize = 5000;
     private long flushIntervalMs = 5000;
 
     private HttpLogSender logSender;
     private BlockingQueue<LogEntry> buffer;
     private ScheduledExecutorService scheduler;
+
+    protected BlockingQueue<LogEntry> getBuffer() {
+        return this.buffer;
+    }
 
     public void setAppKey(String appKey) {
         this.appKey = appKey;
@@ -32,8 +37,16 @@ public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
         this.batchSize = batchSize;
     }
 
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
+    }
+
     public void setFlushIntervalMs(long flushIntervalMs) {
         this.flushIntervalMs = flushIntervalMs;
+    }
+
+    protected void setLogSender(HttpLogSender logSender) {
+        this.logSender = logSender;
     }
 
     @Override
@@ -44,7 +57,7 @@ public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
         }
 
         logSender = new HttpLogSender(appKey, url);
-        buffer = new LinkedBlockingQueue<>(5000);
+        buffer = new LinkedBlockingQueue<>(bufferSize);
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "chronicle-flusher");
             t.setDaemon(true);
