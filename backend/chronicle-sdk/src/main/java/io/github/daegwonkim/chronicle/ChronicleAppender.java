@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
@@ -16,10 +17,12 @@ public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     private int batchSize = 100;
     private int bufferSize = 5000;
     private long flushIntervalMs = 5000;
+    private final AtomicBoolean isFlushing = new AtomicBoolean(false);
 
     private HttpLogSender logSender;
     private BlockingQueue<LogEntry> buffer;
     private ScheduledExecutorService scheduler;
+    private ExecutorService worker;
 
     protected BlockingQueue<LogEntry> getBuffer() {
         return this.buffer;
@@ -63,8 +66,8 @@ public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
             t.setDaemon(true);
             return t;
         });
-
         scheduler.scheduleAtFixedRate(this::flush, flushIntervalMs, flushIntervalMs, TimeUnit.MILLISECONDS);
+        worker = Executors.newFixedThreadPool(4);
 
         super.start();
     }
@@ -77,8 +80,14 @@ public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
             return;
         }
 
-        if (buffer.size() >= batchSize) {
-            scheduler.execute(this::flush);
+        if (buffer.size() >= batchSize && isFlushing.compareAndSet(false, true)) {
+            worker.execute(() -> {
+                try {
+                    flush();
+                } finally {
+                    isFlushing.set(false);
+                }
+            });
         }
     }
 
@@ -102,7 +111,7 @@ public class ChronicleAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
         }
 
         List<LogEntry> batch = new ArrayList<>();
-        buffer.drainTo(batch);
+        buffer.drainTo(batch, batchSize);
 
         if (batch.isEmpty()) {
             return;

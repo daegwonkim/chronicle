@@ -9,8 +9,8 @@
 
     <appender name="CHRONICLE" class="io.github.daegwonkim.chronicle.ChronicleAppender">
         <appKey>test-app</appKey>
-        <url>http://localhost:8080/v1/api/logs</url>
-        <batchSize>50</batchSize>
+        <url>${CHRONICLE_URL:-http://localhost:8080/v1/api/logs}</url>
+        <batchSize>5000</batchSize>
         <flushIntervalMs>3000</flushIntervalMs>
     </appender>
 

@@ -14,6 +14,8 @@ spring:
     hibernate:
       ddl-auto: update
     properties:
+      jdbc:
+        batch_size: 5000
       hibernate:
         format_sql: true
 
