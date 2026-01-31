@@ -40,27 +40,73 @@ services:
         reservations:
           memory: 1G
 
-  chronicle-test-app:
-    build:
-      context: .
-      dockerfile: chronicle-test-app/Dockerfile
-    ports:
-      - "8081:8081"
-    environment:
-      CHRONICLE_URL: http://toxiproxy:9080/v1/api/logs
-    depends_on:
-      - chronicle-api
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 1G
-
-  toxiproxy:
-    image: ghcr.io/shopify/toxiproxy
-    ports:
-      - "8474:8474"
-      - "9080:9080"
+#  chronicle-test-app-1:
+#    build:
+#      context: .
+#      dockerfile: chronicle-test-app/Dockerfile
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      SERVER_PORT: 8081
+#      CHRONICLE_URL: http://chronicle-api:8080/v1/api/logs
+#    depends_on:
+#      - chronicle-api
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 1G
+#
+#  chronicle-test-app-2:
+#    build:
+#      context: .
+#      dockerfile: chronicle-test-app/Dockerfile
+#    ports:
+#      - "8082:8082"
+#    environment:
+#      SERVER_PORT: 8082
+#      CHRONICLE_URL: http://chronicle-api:8080/v1/api/logs
+#    depends_on:
+#      - chronicle-api
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 1G
+#
+#  chronicle-test-app-3:
+#    build:
+#      context: .
+#      dockerfile: chronicle-test-app/Dockerfile
+#    ports:
+#      - "8083:8083"
+#    environment:
+#      SERVER_PORT: 8083
+#      CHRONICLE_URL: http://chronicle-api:8080/v1/api/logs
+#    depends_on:
+#      - chronicle-api
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 1G
+#
+#  chronicle-test-app-4:
+#    build:
+#      context: .
+#      dockerfile: chronicle-test-app/Dockerfile
+#    ports:
+#      - "8084:8084"
+#    environment:
+#      SERVER_PORT: 8084
+#      CHRONICLE_URL: http://chronicle-api:8080/v1/api/logs
+#    depends_on:
+#      - chronicle-api
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 1G
 
   influxdb:
     image: influxdb:1.8
@@ -70,6 +116,7 @@ services:
       - influxdb:/var/lib/influxdb
     environment:
       - INFLUXDB_DB=k6
+      - INFLUXDB_HTTP_MAX_BODY_SIZE=0
 
   grafana:
     image: grafana/grafana:11.6.10
