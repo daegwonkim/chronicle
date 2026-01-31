@@ -1,6 +1,7 @@
 package io.github.daegwonkim.chronicle.controller;
 
 import io.github.daegwonkim.chronicle.dto.logs.SaveLogsDto;
+import io.github.daegwonkim.chronicle.dto.logs.SearchLogsDto;
 import io.github.daegwonkim.chronicle.service.LogService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -18,5 +19,14 @@ public class LogController {
     public void saveLogs(@RequestHeader("X-App-Key") String appKey,
                          @RequestBody SaveLogsDto.Req req) {
         logService.saveLogs(appKey, req);
+    }
+
+    @Operation(summary = "로그 조회 API", description = "검색 조건에 맞는 로그를 모두 조회합니다.")
+    @GetMapping
+    public SearchLogsDto.Res saveLogs(
+            @RequestHeader("X-Api-Key") String apiKey,
+            @ModelAttribute SearchLogsDto.Req req
+    ) {
+        return logService.searchLogs(req);
     }
 }
