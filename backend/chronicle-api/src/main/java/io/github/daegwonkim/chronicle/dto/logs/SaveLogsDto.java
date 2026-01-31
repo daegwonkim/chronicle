@@ -10,6 +10,9 @@ public class SaveLogsDto {
 
     @Schema(description = "로그 저장 요청 DTO")
     public record Req(
+            @Schema(description = "로그 저장 요청을 보낸 서비스 이름")
+            String appName,
+
             @Schema(description = "저장할 로그 목록")
             List<LogEntry> logs
     ) {

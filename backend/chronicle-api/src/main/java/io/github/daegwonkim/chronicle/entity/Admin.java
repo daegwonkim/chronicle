@@ -1,26 +1,26 @@
 package io.github.daegwonkim.chronicle.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 
+@Entity
+@Table(name = "admins")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-abstract class BaseEntity {
+public class Admin {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private Boolean withdrawn = false;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 }

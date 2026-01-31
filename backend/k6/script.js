@@ -1,42 +1,57 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
-const BASE_URL = __ENV.BASE_URL || 'http://chronicle-test-app:8081';
+const API_URL = __ENV.API_URL || 'http://chronicle-api:8080';
+const APP_KEY = __ENV.APP_KEY || '0c3ff5ef-be52-4fb5-8494-43c94e004e5f';
+
+const LOG_LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR'];
 
 const errorRate = new Rate('errors');
 const logLatency = new Trend('log_latency');
-const bulkLatency = new Trend('bulk_latency');
+
+const headers = {
+  'Content-Type': 'application/json',
+  'X-App-Key': APP_KEY,
+};
 
 export const options = {
   stages: [
-    { duration: '30s', target: 200 },
-    { duration: '30s', target: 400 },
-    { duration: '30s', target: 600 },
-    { duration: '30s', target: 800 },
+    { duration: '10s', target: 100 },
+    { duration: '30s', target: 300 },
+    { duration: '30s', target: 500 },
+    { duration: '30s', target: 700 },
     { duration: '30s', target: 1000 },
-    { duration: '1m', target: 2000 },  // 최대 부하 유지
-    { duration: '30s', target: 0 }
+    { duration: '2m', target: 1500 },
+    { duration: '10s', target: 0 },
   ],
   thresholds: {
-    http_req_duration: ['p(95)<500'],  // 95% 요청이 500ms 이내
-    errors: ['rate<0.1'],              // 에러율 10% 미만
+    http_req_duration: ['p(95)<500'],
+    errors: ['rate<0.1'],
   },
 };
 
-export default function () {
-  // POST /test/logs - 모든 레벨 로그 생성
-  const logRes = http.post(`${BASE_URL}/test/logs`);
-  check(logRes, {
-    'logs: status 200': (r) => r.status === 200,
-  }) || errorRate.add(1);
-  logLatency.add(logRes.timings.duration);
+function buildPayload() {
+  const now = new Date().toISOString();
+  const logs = [];
+  for (let i = 0; i < 5; i++) {
+    logs.push({
+      level: LOG_LEVELS[i],
+      message: `${LOG_LEVELS[i]} level log message`,
+      logger: 'k6-test',
+      loggedAt: now,
+    });
+  }
+  return JSON.stringify({ logs });
+}
 
-  // POST /test/logs/bulk - 벌크 로그 생성
-//  const bulkCount = Math.floor(Math.random() * 91) + 10; // 10~100
-//  const bulkRes = http.post(`${BASE_URL}/test/logs/bulk?count=${bulkCount}`);
-//  check(bulkRes, {
-//    'bulk: status 200': (r) => r.status === 200,
-//  }) || errorRate.add(1);
-//  bulkLatency.add(bulkRes.timings.duration);
+export default function () {
+  const payload = buildPayload();
+  const res = http.post(`${API_URL}/v1/api/logs`, payload, { headers });
+
+  check(res, {
+    'status 200': (r) => r.status === 200,
+  }) || errorRate.add(1);
+
+  logLatency.add(res.timings.duration);
 }

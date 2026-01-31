@@ -3,6 +3,7 @@ package io.github.daegwonkim.chronicle.entity;
 import io.github.daegwonkim.chronicle.enumerate.LogLevel;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.time.Instant;
 @Entity
 @Table(name = "logs")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class Log {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,16 +32,4 @@ public class Log {
 
     @Column(name = "logged_at", nullable = false, updatable = false)
     private Instant loggedAt;
-
-    public static Log create(LogLevel level, String message, String logger, Instant loggedAt) {
-        Log log = new Log();
-
-        log.appId = 0L;
-        log.level = level;
-        log.message = message;
-        log.logger = logger;
-        log.loggedAt = loggedAt;
-
-        return log;
-    }
 }
