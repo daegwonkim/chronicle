@@ -5,6 +5,7 @@ import io.github.daegwonkim.chronicle.dto.logs.GetProjectsDto;
 import io.github.daegwonkim.chronicle.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +24,10 @@ public class ProjectController {
     }
 
     @Operation(summary = "프로젝트 목록 조회", description = "관리자 계정에 연결된 프로젝트 목록을 조회합니다.")
+    @GetMapping
     public GetProjectsDto.Res getProjects() {
         return projectService.getProjects(0L);
     }
+
+
 }
