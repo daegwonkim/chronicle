@@ -9,6 +9,8 @@ spring:
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 5000
 
   jpa:
     hibernate:
@@ -18,8 +20,3 @@ spring:
         batch_size: 5000
       hibernate:
         format_sql: true
-
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.type: trace
