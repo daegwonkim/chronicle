@@ -1,7 +1,8 @@
 package io.github.daegwonkim.chronicle.service;
 
-import io.github.daegwonkim.chronicle.dto.logs.CreateProjectDto;
-import io.github.daegwonkim.chronicle.dto.logs.GetProjectsDto;
+import io.github.daegwonkim.chronicle.dto.projects.CreateProjectDto;
+import io.github.daegwonkim.chronicle.dto.projects.GetProjectsDto;
+import io.github.daegwonkim.chronicle.dto.projects.ModifyProjectDto;
 import io.github.daegwonkim.chronicle.entity.Project;
 import io.github.daegwonkim.chronicle.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,5 +35,21 @@ public class ProjectService {
                 .toList();
 
         return new GetProjectsDto.Res(projects);
+    }
+
+    @Transactional
+    public void modifyProject(Long id, ModifyProjectDto.Req req) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + id));
+
+        project.modify(req.name(), req.description());
+    }
+
+    @Transactional
+    public void deleteProject(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + id));
+
+        project.delete();
     }
 }

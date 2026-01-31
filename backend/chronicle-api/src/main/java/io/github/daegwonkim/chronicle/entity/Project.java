@@ -38,8 +38,17 @@ public class Project {
     private Instant createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    @Column(name = "modified_at", nullable = false)
+    private Instant modifiedAt;
+
+    public void modify(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
+    public void delete() {
+        this.deleted = true;
+    }
 
     public static Project create(Long adminId, String name, String description) {
         Project project = new Project();

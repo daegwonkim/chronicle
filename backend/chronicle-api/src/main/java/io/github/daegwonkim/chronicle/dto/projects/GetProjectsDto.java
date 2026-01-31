@@ -1,4 +1,4 @@
-package io.github.daegwonkim.chronicle.dto.logs;
+package io.github.daegwonkim.chronicle.dto.projects;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

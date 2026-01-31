@@ -1,7 +1,8 @@
 package io.github.daegwonkim.chronicle.service;
 
-import io.github.daegwonkim.chronicle.dto.logs.CreateProjectDto;
-import io.github.daegwonkim.chronicle.dto.logs.GetProjectsDto;
+import io.github.daegwonkim.chronicle.dto.projects.CreateProjectDto;
+import io.github.daegwonkim.chronicle.dto.projects.GetProjectsDto;
+import io.github.daegwonkim.chronicle.dto.projects.ModifyProjectDto;
 import io.github.daegwonkim.chronicle.entity.Project;
 import io.github.daegwonkim.chronicle.repository.ProjectRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -15,7 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collections;
 import java.util.List;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -80,5 +84,66 @@ class ProjectServiceTest {
 
             // then
             assertThat(res.projects()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("프로젝트의 이름과 설명을 수정한다")
+    void modifyProject_updatesNameAndDescription() {
+        // given
+        Long projectId = 1L;
+        Project project = Project.create(1L, "Old Name", "Old Desc");
+        given(projectRepository.findById(projectId)).willReturn(Optional.of(project));
+
+        ModifyProjectDto.Req req = new ModifyProjectDto.Req("New Name", "New Desc");
+
+        // when
+        projectService.modifyProject(projectId, req);
+
+        // then
+        assertThat(project.getName()).isEqualTo("New Name");
+        assertThat(project.getDescription()).isEqualTo("New Desc");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 프로젝트를 수정하면 예외가 발생한다")
+    void modifyProject_throwsWhenNotFound() {
+        // given
+        Long projectId = 999L;
+        given(projectRepository.findById(projectId)).willReturn(Optional.empty());
+
+        ModifyProjectDto.Req req = new ModifyProjectDto.Req("Name", "Desc");
+
+        // when & then
+        assertThatThrownBy(() -> projectService.modifyProject(projectId, req))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("프로젝트를 삭제하면 deleted 플래그가 true로 변경된다")
+    void deleteProject_setsDeletedTrue() {
+        // given
+        Long projectId = 1L;
+        Project project = Project.create(1L, "Project", "Desc");
+        given(projectRepository.findById(projectId)).willReturn(Optional.of(project));
+
+        assertThat(project.getDeleted()).isFalse();
+
+        // when
+        projectService.deleteProject(projectId);
+
+        // then
+        assertThat(project.getDeleted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 프로젝트를 삭제하면 예외가 발생한다")
+    void deleteProject_throwsWhenNotFound() {
+        // given
+        Long projectId = 999L;
+        given(projectRepository.findById(projectId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> projectService.deleteProject(projectId))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -35,6 +35,6 @@ public class Application {
     private Instant createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    @Column(name = "modified_at", nullable = false)
+    private Instant modifiedAt;
 }
