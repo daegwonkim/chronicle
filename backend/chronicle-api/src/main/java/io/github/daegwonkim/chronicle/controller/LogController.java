@@ -16,9 +16,9 @@ public class LogController {
 
     @Operation(summary = "로그 저장 API", description = "로그를 저장합니다.")
     @PostMapping
-    public void saveLogs(@RequestHeader("X-App-Key") String appKey,
+    public void saveLogs(@RequestHeader("X-Api-Key") String apiKey,
                          @RequestBody SaveLogsDto.Req req) {
-        logService.saveLogs(appKey, req);
+        logService.saveLogs(apiKey, req);
     }
 
     @Operation(summary = "로그 조회 API", description = "검색 조건에 맞는 로그를 모두 조회합니다.")
