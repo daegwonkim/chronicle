@@ -19,6 +19,9 @@ public class Project {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "admin_id", nullable = false, updatable = false)
+    private Long adminId;
+
     @Column(name = "api_key", unique = true, nullable = false, updatable = false)
     private UUID apiKey;
 
@@ -38,9 +41,10 @@ public class Project {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public static Project create(String name, String description) {
+    public static Project create(Long adminId, String name, String description) {
         Project project = new Project();
 
+        project.adminId = adminId;
         project.apiKey = UUID.randomUUID();
         project.name = name;
         project.description = description;
