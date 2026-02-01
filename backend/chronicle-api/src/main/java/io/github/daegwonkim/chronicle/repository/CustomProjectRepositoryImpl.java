@@ -45,7 +45,7 @@ public class CustomProjectRepositoryImpl implements CustomProjectRepository {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(project.adminId.eq(condition.adminId()));
         if (condition.query() != null && !condition.query().isBlank()) {
-            builder.and(project.name.like("%" + condition.query() + "%"));
+            builder.and(project.name.contains(condition.query()));
         }
         builder.and(project.deleted.eq(false));
         return builder;
