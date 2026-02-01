@@ -10,8 +10,8 @@ import java.util.List;
 public class SearchLogsDto {
     @Schema(description = "로그 검색 요청 DTO")
     public record Req(
-            @Schema(description = "앱 ID", example = "0")
-            Long appId,
+            @Schema(description = "앱 ID 목록", example = "0")
+            List<Long> appIds,
 
             @Schema(description = "시간 범위")
             TimeRangeVo timeRange,

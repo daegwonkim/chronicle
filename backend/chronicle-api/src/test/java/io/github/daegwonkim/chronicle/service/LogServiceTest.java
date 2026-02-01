@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -53,7 +54,7 @@ class LogServiceTest {
     @InjectMocks
     private LogService logService;
 
-    private static final String API_KEY = "test-api-key";
+    private static final UUID API_KEY = UUID.randomUUID();
 
     @Test
     @DisplayName("기존 Application이 있으면 해당 ID로 로그를 저장한다")
@@ -128,7 +129,7 @@ class LogServiceTest {
     @DisplayName("유효하지 않은 API 키로 요청하면 예외가 발생한다")
     void saveLogs_throwsWhenInvalidApiKey() {
         // given
-        String invalidApiKey = "invalid-key";
+        UUID invalidApiKey = UUID.randomUUID();
         given(projectRepository.findByApiKeyAndDeletedFalse(invalidApiKey)).willReturn(Optional.empty());
 
         SaveLogsDto.Req req = new SaveLogsDto.Req("my-app", List.of(
@@ -145,7 +146,7 @@ class LogServiceTest {
     void searchLogs_returnsLogsAndTotalCount() {
         // given
         TimeRangeVo timeRange = new TimeRangeVo(Instant.parse("2025-01-01T00:00:00Z"), Instant.parse("2025-01-02T00:00:00Z"));
-        SearchLogsDto.Req req = new SearchLogsDto.Req(1L, timeRange, LogLevel.ERROR, "NullPointer", 0, 10);
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), timeRange, LogLevel.ERROR, "NullPointer", 0, 10);
 
         List<LogVo> logs = List.of(
                 new LogVo(1L, "my-app", LogLevel.ERROR, "NullPointerException occurred", "com.example.Main", Instant.parse("2025-01-01T12:00:00Z")),
@@ -166,7 +167,7 @@ class LogServiceTest {
     @DisplayName("size가 0이면 기본값 20으로 검색한다")
     void searchLogs_usesDefaultSizeWhenZero() {
         // given
-        SearchLogsDto.Req req = new SearchLogsDto.Req(1L, null, null, null, 0, 0);
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, null, null, 0, 0);
         given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
 
         // when
@@ -184,7 +185,7 @@ class LogServiceTest {
     @DisplayName("size가 0이 아니면 요청한 size를 그대로 사용한다")
     void searchLogs_usesRequestedSize() {
         // given
-        SearchLogsDto.Req req = new SearchLogsDto.Req(1L, null, null, null, 0, 50);
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, null, null, 0, 50);
         given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
 
         // when
@@ -202,7 +203,7 @@ class LogServiceTest {
     @DisplayName("검색 결과가 없으면 빈 목록과 totalCount 0을 반환한다")
     void searchLogs_returnsEmptyWhenNoResults() {
         // given
-        SearchLogsDto.Req req = new SearchLogsDto.Req(1L, null, LogLevel.TRACE, "nonexistent", 0, 10);
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, LogLevel.TRACE, "nonexistent", 0, 10);
         given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
 
         // when
@@ -218,7 +219,7 @@ class LogServiceTest {
     void searchLogs_convertsReqToConditionCorrectly() {
         // given
         TimeRangeVo timeRange = new TimeRangeVo(Instant.parse("2025-06-01T00:00:00Z"), Instant.parse("2025-06-30T23:59:59Z"));
-        SearchLogsDto.Req req = new SearchLogsDto.Req(5L, timeRange, LogLevel.WARN, "timeout", 2, 30);
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(5L), timeRange, LogLevel.WARN, "timeout", 2, 30);
         given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
 
         // when
@@ -229,7 +230,7 @@ class LogServiceTest {
         verify(logRepository).search(captor.capture());
 
         SearchLogsCondition condition = captor.getValue();
-        assertThat(condition.appId()).isEqualTo(5L);
+        assertThat(condition.appIds()).isEqualTo(List.of(5L));
         assertThat(condition.timeRange()).isEqualTo(timeRange);
         assertThat(condition.logLevel()).isEqualTo(LogLevel.WARN);
         assertThat(condition.query()).isEqualTo("timeout");
