@@ -3,7 +3,7 @@ import { check } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
 const API_URL = __ENV.API_URL || 'http://chronicle-api:8080';
-const APP_KEY = __ENV.APP_KEY || '0c3ff5ef-be52-4fb5-8494-43c94e004e5f';
+const API_KEY = __ENV.API_KEY || '';
 
 const LOG_LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR'];
 
@@ -12,27 +12,26 @@ const logLatency = new Trend('log_latency');
 
 const headers = {
   'Content-Type': 'application/json',
-  'X-App-Key': APP_KEY,
+  'X-Api-Key': API_KEY,
 };
 
 export const options = {
   stages: [
-    { duration: '10s', target: 100 },
-    { duration: '30s', target: 300 },
-    { duration: '30s', target: 500 },
-    { duration: '30s', target: 700 },
-    { duration: '30s', target: 1000 },
-    { duration: '2m', target: 1500 },
-    { duration: '10s', target: 0 },
+    { duration: '2m', target: 150 },   // 워밍업
+    { duration: '3m', target: 350 },   // 평균 트래픽
+    { duration: '5m', target: 650 },   // 피크 트래픽
+    { duration: '5m', target: 650 },   // 5분간 유지
+    { duration: '2m', target: 0 },     // 쿨다운
   ],
   thresholds: {
-    http_req_duration: ['p(95)<500'],
-    errors: ['rate<0.1'],
+    http_req_duration: ['p(95)<472'],
+    http_req_failed: ['rate<0.01'],
   },
 };
 
 function buildPayload() {
   const now = new Date().toISOString();
+  const appName = __ENV.APP_NAME || 'k6-test-app';
   const logs = [];
   for (let i = 0; i < 5; i++) {
     logs.push({
@@ -42,7 +41,7 @@ function buildPayload() {
       loggedAt: now,
     });
   }
-  return JSON.stringify({ logs });
+  return JSON.stringify({ appName, logs });
 }
 
 export default function () {
