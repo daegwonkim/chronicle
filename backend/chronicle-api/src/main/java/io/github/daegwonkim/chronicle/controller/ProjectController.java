@@ -1,7 +1,7 @@
 package io.github.daegwonkim.chronicle.controller;
 
 import io.github.daegwonkim.chronicle.dto.projects.CreateProjectDto;
-import io.github.daegwonkim.chronicle.dto.projects.GetProjectsDto;
+import io.github.daegwonkim.chronicle.dto.projects.SearchProjectsDto;
 import io.github.daegwonkim.chronicle.dto.projects.ModifyProjectDto;
 import io.github.daegwonkim.chronicle.service.ProjectService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,8 +23,8 @@ public class ProjectController {
 
     @Operation(summary = "프로젝트 목록 조회", description = "관리자 계정에 연결된 프로젝트 목록을 조회합니다.")
     @GetMapping
-    public GetProjectsDto.Res getProjects() {
-        return projectService.getProjects(0L);
+    public SearchProjectsDto.Res searchProjects(@ModelAttribute SearchProjectsDto.Req req) {
+        return projectService.searchProjects(0L, req);
     }
 
     @Operation(summary = "프로젝트 수정", description = "프로젝트명, 설명 등을 수정합니다.")

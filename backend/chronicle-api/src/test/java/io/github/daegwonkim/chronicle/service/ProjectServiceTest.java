@@ -1,10 +1,13 @@
 package io.github.daegwonkim.chronicle.service;
 
 import io.github.daegwonkim.chronicle.dto.projects.CreateProjectDto;
-import io.github.daegwonkim.chronicle.dto.projects.GetProjectsDto;
+import io.github.daegwonkim.chronicle.dto.projects.SearchProjectsDto;
 import io.github.daegwonkim.chronicle.dto.projects.ModifyProjectDto;
 import io.github.daegwonkim.chronicle.entity.Project;
 import io.github.daegwonkim.chronicle.repository.ProjectRepository;
+import io.github.daegwonkim.chronicle.repository.condition.SearchProjectsCondition;
+import io.github.daegwonkim.chronicle.repository.result.SearchProjectsResult;
+import io.github.daegwonkim.chronicle.vo.ProjectVo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,13 +16,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
 import java.util.List;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -54,18 +57,24 @@ class ProjectServiceTest {
 
     @Test
     @DisplayName("관리자 계정과 연결된 프로젝트 목록을 조회한다")
-    void getProjects_findProjectsByAdminId() {
+    void searchProjects_findProjectsByAdminId() {
         // given
         Long adminId = 1L;
-        Project project1 = Project.create(adminId, "Project A", "Description A");
-        Project project2 = Project.create(adminId, "Project B", null);
-        given(projectRepository.findAllByAdminId(adminId)).willReturn(List.of(project1, project2));
+        SearchProjectsDto.Req req = new SearchProjectsDto.Req(null, 0, 20);
+
+        List<ProjectVo> projects = List.of(
+                new ProjectVo(1L, "Project A", "Description A"),
+                new ProjectVo(2L, "Project B", null)
+        );
+        given(projectRepository.search(any(SearchProjectsCondition.class)))
+                .willReturn(new SearchProjectsResult(projects, 2L));
 
         // when
-        GetProjectsDto.Res res = projectService.getProjects(adminId);
+        SearchProjectsDto.Res res = projectService.searchProjects(adminId, req);
 
         // then
         assertThat(res.projects()).hasSize(2);
+        assertThat(res.totalCount()).isEqualTo(2L);
         assertThat(res.projects().get(0).name()).isEqualTo("Project A");
         assertThat(res.projects().get(0).description()).isEqualTo("Description A");
         assertThat(res.projects().get(1).name()).isEqualTo("Project B");
@@ -73,17 +82,28 @@ class ProjectServiceTest {
     }
 
     @Test
-    @DisplayName("프로젝트가 없는 관리자는 빈 목록을 반환한다")
-        void getProjects_returnsEmptyListWhenNoProjects() {
-            // given
-            Long adminId = 999L;
-            given(projectRepository.findAllByAdminId(adminId)).willReturn(Collections.emptyList());
+    @DisplayName("검색어로 프로젝트를 필터링하여 조회한다")
+    void searchProjects_filtersProjectsByQuery() {
+        // given
+        Long adminId = 1L;
+        SearchProjectsDto.Req req = new SearchProjectsDto.Req("API", 0, 20);
 
-            // when
-            GetProjectsDto.Res res = projectService.getProjects(adminId);
+        List<ProjectVo> projects = List.of(new ProjectVo(1L, "API Server", "REST API"));
+        given(projectRepository.search(any(SearchProjectsCondition.class)))
+                .willReturn(new SearchProjectsResult(projects, 1L));
 
-            // then
-            assertThat(res.projects()).isEmpty();
+        // when
+        SearchProjectsDto.Res res = projectService.searchProjects(adminId, req);
+
+        // then
+        ArgumentCaptor<SearchProjectsCondition> captor = ArgumentCaptor.forClass(SearchProjectsCondition.class);
+        verify(projectRepository).search(captor.capture());
+
+        SearchProjectsCondition condition = captor.getValue();
+        assertThat(condition.adminId()).isEqualTo(adminId);
+        assertThat(condition.query()).isEqualTo("API");
+        assertThat(res.projects()).hasSize(1);
+        assertThat(res.totalCount()).isEqualTo(1L);
     }
 
     @Test
