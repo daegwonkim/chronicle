@@ -18,13 +18,13 @@ public class AdminController {
     private final AdminService adminService;
 
     @Operation(summary = "회원가입", description = "새로운 계정을 생성합니다.")
-    @PostMapping
+    @PostMapping("/sign-up")
     public void signUp(@RequestBody SignUpDto.Req req) {
         adminService.signUp(req);
     }
 
     @Operation(summary = "로그인", description = "기존 계정으로 로그인합니다.")
-    @PostMapping
+    @PostMapping("/sign-in")
     public void signIn(@RequestBody SignInDto.Req req) {
         adminService.signIn(req);
     }

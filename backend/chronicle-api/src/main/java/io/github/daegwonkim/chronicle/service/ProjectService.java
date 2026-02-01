@@ -1,10 +1,12 @@
 package io.github.daegwonkim.chronicle.service;
 
 import io.github.daegwonkim.chronicle.dto.projects.CreateProjectDto;
-import io.github.daegwonkim.chronicle.dto.projects.GetProjectsDto;
+import io.github.daegwonkim.chronicle.dto.projects.SearchProjectsDto;
 import io.github.daegwonkim.chronicle.dto.projects.ModifyProjectDto;
 import io.github.daegwonkim.chronicle.entity.Project;
 import io.github.daegwonkim.chronicle.repository.ProjectRepository;
+import io.github.daegwonkim.chronicle.repository.condition.SearchProjectsCondition;
+import io.github.daegwonkim.chronicle.repository.result.SearchProjectsResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +28,11 @@ public class ProjectService {
     }
 
     @Transactional(readOnly = true)
-    public GetProjectsDto.Res getProjects(Long adminId) {
-        List<GetProjectsDto.Res.Project> projects = projectRepository.findAllByAdminId(adminId)
-                .stream()
-                .map(project -> new GetProjectsDto.Res.Project(
-                        project.getId(), project.getName(), project.getDescription()
-                ))
-                .toList();
+    public SearchProjectsDto.Res searchProjects(Long adminId, SearchProjectsDto.Req req) {
+        SearchProjectsCondition condition = new SearchProjectsCondition(adminId, req.query(), req.page(), req.size());
+        SearchProjectsResult result = projectRepository.search(condition);
 
-        return new GetProjectsDto.Res(projects);
+        return new SearchProjectsDto.Res(result.projects(), result.totalCount());
     }
 
     @Transactional
