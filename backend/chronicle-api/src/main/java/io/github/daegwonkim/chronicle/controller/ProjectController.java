@@ -1,6 +1,7 @@
 package io.github.daegwonkim.chronicle.controller;
 
 import io.github.daegwonkim.chronicle.dto.projects.CreateProjectDto;
+import io.github.daegwonkim.chronicle.dto.projects.GetProjectDto;
 import io.github.daegwonkim.chronicle.dto.projects.SearchProjectsDto;
 import io.github.daegwonkim.chronicle.dto.projects.ModifyProjectDto;
 import io.github.daegwonkim.chronicle.service.ProjectService;
@@ -25,6 +26,12 @@ public class ProjectController {
     @GetMapping
     public SearchProjectsDto.Res searchProjects(@ModelAttribute SearchProjectsDto.Req req) {
         return projectService.searchProjects(0L, req);
+    }
+
+    @Operation(summary = "프로젝트 상세 조회", description = "프로젝트 상세 정보를 조회합니다.")
+    @GetMapping("/{id}")
+    public GetProjectDto.Res getProject(@PathVariable Long id) {
+        return projectService.getProject(id);
     }
 
     @Operation(summary = "프로젝트 수정", description = "프로젝트명, 설명 등을 수정합니다.")
