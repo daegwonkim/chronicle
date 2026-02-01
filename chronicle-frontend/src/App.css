@@ -462,31 +462,64 @@
   color: #666;
 }
 
-.app-tags {
+.dropdown-wrapper {
+  position: relative;
+}
+
+.dropdown-trigger {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 130px;
+  text-align: left;
+  white-space: nowrap;
 }
 
-.app-tag {
-  padding: 0.3rem 0.7rem;
-  border-radius: 14px;
+.dropdown-arrow {
+  font-size: 0.55rem;
+  color: #888;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 180px;
+  max-height: 220px;
+  overflow-y: auto;
+  background-color: #16162a;
   border: 1px solid #333;
-  background-color: transparent;
-  color: #aaa;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
   font-size: 0.8rem;
+  color: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.1s;
 }
 
-.app-tag:hover {
-  border-color: #646cff;
+.dropdown-item:hover {
+  background-color: rgba(100, 108, 255, 0.1);
 }
 
-.app-tag.active {
-  background-color: #646cff;
-  border-color: #646cff;
-  color: #fff;
+.dropdown-item input[type='checkbox'] {
+  accent-color: #646cff;
+}
+
+.dropdown-hint {
+  color: #666;
+  cursor: default;
 }
 
 .time-range {
@@ -599,6 +632,7 @@
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid rgba(42, 42, 74, 0.5);
   vertical-align: top;
+  text-align: left;
 }
 
 .log-table tbody tr:hover {
@@ -732,9 +766,14 @@
     border-bottom-color: #e0e0e0;
   }
 
-  .app-tag {
+  .dropdown-menu {
+    background-color: #fff;
     border-color: #ddd;
-    color: #555;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .dropdown-item:hover {
+    background-color: rgba(100, 108, 255, 0.08);
   }
 
   .time-range input,

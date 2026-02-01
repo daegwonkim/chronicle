@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   type Application,
@@ -22,6 +22,8 @@ export default function ProjectDashboardPage() {
   const [project, setProject] = useState<GetProjectResponse | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedAppIds, setSelectedAppIds] = useState<number[]>([]);
+  const [appDropdownOpen, setAppDropdownOpen] = useState(false);
+  const appDropdownRef = useRef<HTMLDivElement>(null);
 
   const [logs, setLogs] = useState<Log[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -54,6 +56,16 @@ export default function ProjectDashboardPage() {
       })
       .finally(() => setProjectLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (appDropdownRef.current && !appDropdownRef.current.contains(e.target as Node)) {
+        setAppDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchLogs = useCallback(async () => {
     if (selectedAppIds.length === 0) {
@@ -90,9 +102,7 @@ export default function ProjectDashboardPage() {
 
   function toggleApp(appId: number) {
     setSelectedAppIds((prev) =>
-      prev.includes(appId)
-        ? prev.filter((id) => id !== appId)
-        : [...prev, appId],
+      prev.includes(appId) ? prev.filter((i) => i !== appId) : [...prev, appId],
     );
     setPage(0);
   }
@@ -123,6 +133,16 @@ export default function ProjectDashboardPage() {
       second: '2-digit',
       hour12: false,
     });
+  }
+
+  function getAppDropdownLabel() {
+    if (selectedAppIds.length === 0) return '선택 없음';
+    if (selectedAppIds.length === applications.length) return '전체';
+    if (selectedAppIds.length === 1) {
+      const app = applications.find((a) => a.id === selectedAppIds[0]);
+      return app?.name ?? '1개 선택';
+    }
+    return `${selectedAppIds.length}개 선택`;
   }
 
   if (projectLoading) {
@@ -159,45 +179,76 @@ export default function ProjectDashboardPage() {
           </button>
           <div>
             <h1 className="dashboard-title">{project?.name}</h1>
-            <p className="dashboard-description">
-              {project?.description || '설명 없음'}
-            </p>
+            <p className="dashboard-description">{project?.description || '설명 없음'}</p>
           </div>
         </div>
 
         <div className="dashboard-filters">
-          <div className="filter-section">
-            <label className="filter-label">애플리케이션</label>
-            <div className="app-tags">
-              {applications.map((app) => (
-                <button
-                  key={app.id}
-                  className={`app-tag ${selectedAppIds.includes(app.id) ? 'active' : ''}`}
-                  onClick={() => toggleApp(app.id)}
-                >
-                  {app.name}
-                </button>
-              ))}
-              {applications.length === 0 && (
-                <span className="filter-hint">등록된 애플리케이션이 없습니다</span>
-              )}
-            </div>
-          </div>
-
           <div className="filter-row">
+            <div className="filter-section" ref={appDropdownRef}>
+              <label className="filter-label">애플리케이션</label>
+              <div className="dropdown-wrapper">
+                <button
+                  className="filter-select dropdown-trigger"
+                  onClick={() => setAppDropdownOpen((v) => !v)}
+                >
+                  {getAppDropdownLabel()}
+                  <span className="dropdown-arrow">{appDropdownOpen ? '▲' : '▼'}</span>
+                </button>
+                {appDropdownOpen && (
+                  <div className="dropdown-menu">
+                    <label className="dropdown-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedAppIds.length === applications.length}
+                        onChange={() => {
+                          if (selectedAppIds.length === applications.length) {
+                            setSelectedAppIds([]);
+                          } else {
+                            setSelectedAppIds(applications.map((a) => a.id));
+                          }
+                          setPage(0);
+                        }}
+                      />
+                      전체
+                    </label>
+                    {applications.map((app) => (
+                      <label key={app.id} className="dropdown-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedAppIds.includes(app.id)}
+                          onChange={() => toggleApp(app.id)}
+                        />
+                        {app.name}
+                      </label>
+                    ))}
+                    {applications.length === 0 && (
+                      <span className="dropdown-item dropdown-hint">등록된 앱 없음</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="filter-section filter-grow">
               <label className="filter-label">시간 범위</label>
               <div className="time-range">
                 <input
                   type="datetime-local"
                   value={fromTime}
-                  onChange={(e) => { setFromTime(e.target.value); setPage(0); }}
+                  onChange={(e) => {
+                    setFromTime(e.target.value);
+                    setPage(0);
+                  }}
                 />
                 <span className="time-sep">~</span>
                 <input
                   type="datetime-local"
                   value={toTime}
-                  onChange={(e) => { setToTime(e.target.value); setPage(0); }}
+                  onChange={(e) => {
+                    setToTime(e.target.value);
+                    setPage(0);
+                  }}
                 />
               </div>
             </div>
@@ -207,13 +258,14 @@ export default function ProjectDashboardPage() {
               <select
                 className="filter-select"
                 value={logLevel}
-                onChange={(e) => { setLogLevel(e.target.value as LogLevel | ''); setPage(0); }}
+                onChange={(e) => {
+                  setLogLevel(e.target.value as LogLevel | '');
+                  setPage(0);
+                }}
               >
                 <option value="">전체</option>
                 {LOG_LEVELS.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
+                  <option key={level} value={level}>{level}</option>
                 ))}
               </select>
             </div>
@@ -229,16 +281,12 @@ export default function ProjectDashboardPage() {
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <button className="btn-primary btn-sm" onClick={handleSearch}>
-                  검색
-                </button>
+                <button className="btn-primary btn-sm" onClick={handleSearch}>검색</button>
               </div>
             </div>
 
             <div className="filter-section filter-reset">
-              <button className="btn-secondary btn-sm" onClick={handleResetFilters}>
-                초기화
-              </button>
+              <button className="btn-secondary btn-sm" onClick={handleResetFilters}>초기화</button>
             </div>
           </div>
         </div>
@@ -291,9 +339,7 @@ export default function ProjectDashboardPage() {
             >
               이전
             </button>
-            <span className="page-info">
-              {page + 1} / {totalPages}
-            </span>
+            <span className="page-info">{page + 1} / {totalPages}</span>
             <button
               className="btn-page"
               disabled={page >= totalPages - 1}
