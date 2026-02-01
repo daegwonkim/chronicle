@@ -43,8 +43,11 @@ public class CustomProjectRepositoryImpl implements CustomProjectRepository {
 
     private BooleanBuilder buildSearchCondition(SearchProjectsCondition condition) {
         BooleanBuilder builder = new BooleanBuilder();
-        return builder.and(project.adminId.eq(condition.adminId()))
-                .and(project.name.like(condition.query()))
-                .and(project.deleted.eq(false));
+        builder.and(project.adminId.eq(condition.adminId()));
+        if (condition.query() != null && !condition.query().isBlank()) {
+            builder.and(project.name.like("%" + condition.query() + "%"));
+        }
+        builder.and(project.deleted.eq(false));
+        return builder;
     }
 }
