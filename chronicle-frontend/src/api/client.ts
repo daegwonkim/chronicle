@@ -8,13 +8,13 @@ interface RequestOptions {
 
 export async function apiRequest<T>(
   path: string,
-  options: { method?: string; body?: unknown } = {},
+  options: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
 ): Promise<T | undefined> {
-  const { method = 'GET', body } = options;
+  const { method = 'GET', body, headers } = options;
 
   const requestOptions: RequestOptions = {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
   };
 
   if (body) {

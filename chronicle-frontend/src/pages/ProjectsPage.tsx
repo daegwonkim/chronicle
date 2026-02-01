@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { type GetProjectsResponse, type Project, getProjects } from '../api/projects';
 import CreateProjectModal from '../components/CreateProjectModal';
 
 const PAGE_SIZE = 10;
 
 export default function ProjectsPage() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(0);
@@ -80,7 +82,7 @@ export default function ProjectsPage() {
             ) : (
               <ul className="projects-list">
                 {projects.map((project) => (
-                  <li key={project.id} className="project-card">
+                  <li key={project.id} className="project-card" onClick={() => navigate(`/projects/${project.id}`)}>
                     <h3 className="project-name">{project.name}</h3>
                     <p className="project-description">{project.description || '설명 없음'}</p>
                   </li>
