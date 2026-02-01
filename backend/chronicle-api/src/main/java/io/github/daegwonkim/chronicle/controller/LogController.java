@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/v1/api/logs")
 @RequiredArgsConstructor
@@ -16,17 +18,14 @@ public class LogController {
 
     @Operation(summary = "로그 저장 API", description = "로그를 저장합니다.")
     @PostMapping
-    public void saveLogs(@RequestHeader("X-Api-Key") String apiKey,
+    public void saveLogs(@RequestHeader("X-Api-Key") UUID apiKey,
                          @RequestBody SaveLogsDto.Req req) {
         logService.saveLogs(apiKey, req);
     }
 
     @Operation(summary = "로그 조회 API", description = "검색 조건에 맞는 로그를 모두 조회합니다.")
     @GetMapping
-    public SearchLogsDto.Res saveLogs(
-            @RequestHeader("X-Api-Key") String apiKey,
-            @ModelAttribute SearchLogsDto.Req req
-    ) {
+    public SearchLogsDto.Res searchLogs(@ModelAttribute SearchLogsDto.Req req) {
         return logService.searchLogs(req);
     }
 }

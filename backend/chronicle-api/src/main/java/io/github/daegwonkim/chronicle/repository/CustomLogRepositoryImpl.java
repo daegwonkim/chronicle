@@ -49,8 +49,8 @@ public class CustomLogRepositoryImpl implements CustomLogRepository {
     private BooleanBuilder buildSearchCondition(SearchLogsCondition condition) {
         BooleanBuilder builder = new BooleanBuilder();
 
-        if (condition.appId() != null) {
-            builder.and(log.appId.eq(condition.appId()));
+        if (condition.appIds() != null) {
+            builder.and(log.appId.in(condition.appIds()));
         }
         if (condition.logLevel() != null) {
             builder.and(log.level.eq(condition.logLevel()));

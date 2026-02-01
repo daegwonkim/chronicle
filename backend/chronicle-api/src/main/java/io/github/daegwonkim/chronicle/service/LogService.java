@@ -15,6 +15,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class LogService {
@@ -25,7 +27,7 @@ public class LogService {
     private final ApplicationRepository applicationRepository;
 
     @Transactional
-    public void saveLogs(String apiKey, SaveLogsDto.Req req) {
+    public void saveLogs(UUID apiKey, SaveLogsDto.Req req) {
         Project project = projectRepository.findByApiKeyAndDeletedFalse(apiKey)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid api key: " + apiKey));
         Application application = applicationRepository.findByProjectIdAndNameAndDeletedFalse(project.getId(), req.appName())
@@ -44,7 +46,7 @@ public class LogService {
     @Transactional(readOnly = true)
     public SearchLogsDto.Res searchLogs(SearchLogsDto.Req req) {
         SearchLogsCondition condition = new SearchLogsCondition(
-                req.appId(),
+                req.appIds(),
                 req.timeRange(),
                 req.logLevel(),
                 req.query(),
