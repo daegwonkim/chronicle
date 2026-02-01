@@ -15,7 +15,7 @@ export default function LoginPage() {
 
     try {
       await signin({ username, password });
-      navigate('/');
+      navigate('/projects');
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     } finally {
