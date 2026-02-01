@@ -6,9 +6,9 @@ interface AuthRequest {
 }
 
 export function signup(data: AuthRequest) {
-  return apiRequest<void>('/admins/signup', { method: 'POST', body: data });
+  return apiRequest<void>('/admins/sign-up', { method: 'POST', body: data });
 }
 
 export function signin(data: AuthRequest) {
-  return apiRequest<void>('/admins/signin', { method: 'POST', body: data });
+  return apiRequest<void>('/admins/sign-in', { method: 'POST', body: data });
 }
