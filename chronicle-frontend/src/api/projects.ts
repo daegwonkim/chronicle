@@ -32,3 +32,19 @@ export function createProject(data: { name: string; description: string }) {
 export function deleteProject(id: number) {
   return apiRequest<void>(`/projects/${id}`, { method: 'DELETE' });
 }
+
+export interface Application {
+  id: number;
+  name: string;
+}
+
+export interface GetProjectResponse {
+  id: number;
+  name: string;
+  description: string;
+  applications: Application[];
+}
+
+export function getProject(id: number) {
+  return apiRequest<GetProjectResponse>(`/projects/${id}`);
+}
