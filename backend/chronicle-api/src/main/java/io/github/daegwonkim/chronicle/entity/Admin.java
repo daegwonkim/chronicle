@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.time.Instant;
 
@@ -26,9 +25,8 @@ public class Admin {
     @Column(nullable = false)
     private Boolean withdrawn = false;
 
-    @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private Instant createdAt = Instant.now();
 
     public static Admin create(String username, String password) {
         Admin admin = new Admin();
