@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
+@Table(name = "logs")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Log {
