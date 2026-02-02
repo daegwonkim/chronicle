@@ -1,8 +1,8 @@
 spring:
   application:
     name: chronicle-api
-  config:
-    import: optional:file:.env[.properties]
+#  config:
+#    import: optional:file:.env[.properties]
 
   datasource:
     url: ${DATASOURCE_URL}
