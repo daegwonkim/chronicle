@@ -26,6 +26,8 @@ public class LogService {
     private final ProjectRepository projectRepository;
     private final ApplicationRepository applicationRepository;
 
+    private final static int COUNT_LOG_LIMIT = 10_001;
+
     @Transactional
     public void saveLogs(UUID apiKey, SaveLogsDto.Req req) {
         Project project = projectRepository.findByApiKeyAndDeletedFalse(apiKey)
@@ -53,8 +55,10 @@ public class LogService {
                 req.cursorId(),
                 req.size() != 0 ? req.size() : 20
         );
-        SearchLogsResult result = logRepository.search(condition);
 
-        return new SearchLogsDto.Res(result.logs(), result.hasNext(), result.estimatedCount());
+        SearchLogsResult searchResult = logRepository.search(condition);
+        long estimatedCount = logRepository.countWithLimit(condition, COUNT_LOG_LIMIT);
+
+        return new SearchLogsDto.Res(searchResult.logs(), searchResult.hasNext(), estimatedCount);
     }
 }
