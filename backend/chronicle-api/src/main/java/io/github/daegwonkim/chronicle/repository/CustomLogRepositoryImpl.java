@@ -8,6 +8,8 @@ import io.github.daegwonkim.chronicle.repository.result.SearchLogsResult;
 import io.github.daegwonkim.chronicle.vo.LogVo;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 import static io.github.daegwonkim.chronicle.entity.QLog.log;
 import static io.github.daegwonkim.chronicle.entity.QApplication.application;
 
@@ -16,11 +18,28 @@ public class CustomLogRepositoryImpl implements CustomLogRepository {
 
     private final JPAQueryFactory queryFactory;
 
+    private static final int ESTIMATED_COUNT_LIMIT = 10_000;
+
     @Override
     public SearchLogsResult search(SearchLogsCondition condition) {
         BooleanBuilder searchCondition = buildSearchCondition(condition);
 
-        var logs = queryFactory
+        Long estimatedCount = null;
+        if (condition.cursorId() == null) {
+            estimatedCount = (long) queryFactory
+                    .select(log.id)
+                    .from(log)
+                    .where(searchCondition)
+                    .limit(ESTIMATED_COUNT_LIMIT + 1)
+                    .fetch()
+                    .size();
+        }
+
+        if (condition.cursorId() != null) {
+            searchCondition.and(log.id.lt(condition.cursorId()));
+        }
+
+        var fetched = queryFactory
                 .select(Projections.constructor(LogVo.class,
                         log.id,
                         application.name,
@@ -32,18 +51,14 @@ public class CustomLogRepositoryImpl implements CustomLogRepository {
                 .from(log)
                 .join(application).on(log.appId.eq(application.id))
                 .where(searchCondition)
-                .orderBy(log.loggedAt.desc())
-                .offset((long) condition.page() * condition.size())
-                .limit(condition.size())
+                .orderBy(log.id.desc())
+                .limit(condition.size() + 1)
                 .fetch();
 
-        Long totalCount = queryFactory
-                .select(log.count())
-                .from(log)
-                .where(searchCondition)
-                .fetchOne();
+        boolean hasNext = fetched.size() > condition.size();
+        List<LogVo> logs = hasNext ? fetched.subList(0, condition.size()) : fetched;
 
-        return new SearchLogsResult(logs, totalCount != null ? totalCount : 0L);
+        return new SearchLogsResult(logs, hasNext, estimatedCount);
     }
 
     private BooleanBuilder buildSearchCondition(SearchLogsCondition condition) {
@@ -52,8 +67,8 @@ public class CustomLogRepositoryImpl implements CustomLogRepository {
         if (condition.appIds() != null) {
             builder.and(log.appId.in(condition.appIds()));
         }
-        if (condition.logLevel() != null) {
-            builder.and(log.level.eq(condition.logLevel()));
+        if (condition.logLevels() != null) {
+            builder.and(log.level.in(condition.logLevels()));
         }
         if (condition.timeRange() != null) {
             if (condition.timeRange().from() != null) {

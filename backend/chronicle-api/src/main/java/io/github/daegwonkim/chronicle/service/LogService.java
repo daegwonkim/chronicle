@@ -48,13 +48,13 @@ public class LogService {
         SearchLogsCondition condition = new SearchLogsCondition(
                 req.appIds(),
                 req.timeRange(),
-                req.logLevel(),
+                req.logLevels(),
                 req.query(),
-                req.page(),
+                req.cursorId(),
                 req.size() != 0 ? req.size() : 20
         );
         SearchLogsResult result = logRepository.search(condition);
 
-        return new SearchLogsDto.Res(result.logs(), result.totalCount());
+        return new SearchLogsDto.Res(result.logs(), result.hasNext(), result.estimatedCount());
     }
 }

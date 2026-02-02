@@ -6,6 +6,7 @@ import java.util.List;
 
 public record SearchLogsResult(
         List<LogVo> logs,
-        Long totalCount
+        boolean hasNext,
+        Long estimatedCount
 ) {
 }

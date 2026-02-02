@@ -10,20 +10,20 @@ import java.util.List;
 public class SearchLogsDto {
     @Schema(description = "로그 검색 요청 DTO")
     public record Req(
-            @Schema(description = "앱 ID 목록", example = "0")
+            @Schema(description = "앱 ID 목록")
             List<Long> appIds,
 
             @Schema(description = "시간 범위")
             TimeRangeVo timeRange,
 
-            @Schema(description = "로그 레벨", example = "DEBUG")
-            LogLevel logLevel,
+            @Schema(description = "로그 레벨 목록")
+            List<LogLevel> logLevels,
 
             @Schema(description = "검색어", example = "timed out...")
             String query,
 
-            @Schema(description = "조회할 페이지", example = "0")
-            int page,
+            @Schema(description = "마지막으로 받은 로그 ID (첫 요청 시 null)")
+            Long cursorId,
 
             @Schema(description = "페이지 사이즈", example = "20")
             int size
@@ -34,7 +34,10 @@ public class SearchLogsDto {
             @Schema(description = "검색된 로그 목록")
             List<LogVo> logs,
 
-            @Schema(description = "검색된 로그 총 개수", example = "100")
-            long totalCount
+            @Schema(description = "다음 페이지 존재 여부")
+            boolean hasNext,
+
+            @Schema(description = "예상 총 개수 (최대 10,001, 첫 요청에서만 반환)")
+            Long estimatedCount
     ) {}
 }
