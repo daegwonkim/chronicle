@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
 const API_URL = __ENV.API_URL || 'http://chronicle-api:8080';
@@ -9,11 +9,12 @@ const logLatency = new Trend('log_latency');
 
 export const options = {
   stages: [
-    { duration: '2m', target: 150 },   // 워밍업
-    { duration: '3m', target: 350 },   // 평균 트래픽
-    { duration: '5m', target: 650 },   // 피크 트래픽
-    { duration: '5m', target: 650 },   // 5분간 유지
-    { duration: '2m', target: 0 },     // 쿨다운
+    { duration: '1m', target: 150 },
+    { duration: '2m', target: 350 },
+    { duration: '3m', target: 650 },
+    { duration: '2m', target: 1300 },  // 스트레스 테스트
+    { duration: '1m', target: 1300 },
+    { duration: '2m', target: 0 },
   ],
   thresholds: {
     http_req_duration: ['p(95)<472'],
@@ -50,8 +51,6 @@ export default function () {
   }
   logLatency.add(res.timings.duration);
 
-  sleep(1);
-
   // 다음 페이지 요청 (커서 기반)
   const body = JSON.parse(res.body);
   if (body.hasNext && body.logs.length > 0) {
@@ -64,6 +63,4 @@ export default function () {
 
     logLatency.add(nextRes.timings.duration);
   }
-
-  sleep(1);
 }

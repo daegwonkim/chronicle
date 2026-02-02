@@ -8,9 +8,9 @@ import java.util.List;
 public record SearchLogsCondition(
         List<Long> appIds,
         TimeRangeVo timeRange,
-        LogLevel logLevel,
+        List<LogLevel> logLevels,
         String query,
-        int page,
+        Long cursorId,
         int size
 ) {
 }

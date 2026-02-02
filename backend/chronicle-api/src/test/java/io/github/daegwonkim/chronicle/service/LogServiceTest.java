@@ -31,6 +31,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -142,24 +143,26 @@ class LogServiceTest {
     }
 
     @Test
-    @DisplayName("검색 조건에 맞는 로그 목록과 총 개수를 반환한다")
-    void searchLogs_returnsLogsAndTotalCount() {
+    @DisplayName("검색 조건에 맞는 로그 목록과 예상 개수를 반환한다")
+    void searchLogs_returnsLogsAndEstimatedCount() {
         // given
         TimeRangeVo timeRange = new TimeRangeVo(Instant.parse("2025-01-01T00:00:00Z"), Instant.parse("2025-01-02T00:00:00Z"));
-        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), timeRange, LogLevel.ERROR, "NullPointer", 0, 10);
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), timeRange, List.of(LogLevel.ERROR), "NullPointer", null, 10);
 
         List<LogVo> logs = List.of(
                 new LogVo(1L, "my-app", LogLevel.ERROR, "NullPointerException occurred", "com.example.Main", Instant.parse("2025-01-01T12:00:00Z")),
                 new LogVo(2L, "my-app", LogLevel.ERROR, "NullPointerException in service", "com.example.Service", Instant.parse("2025-01-01T13:00:00Z"))
         );
-        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(logs, 2L));
+        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(logs, false));
+        given(logRepository.countWithLimit(any(SearchLogsCondition.class), anyInt())).willReturn(2L);
 
         // when
         SearchLogsDto.Res res = logService.searchLogs(req);
 
         // then
         assertThat(res.logs()).hasSize(2);
-        assertThat(res.totalCount()).isEqualTo(2L);
+        assertThat(res.hasNext()).isFalse();
+        assertThat(res.estimatedCount()).isEqualTo(2L);
         assertThat(res.logs().get(0).message()).isEqualTo("NullPointerException occurred");
     }
 
@@ -167,8 +170,9 @@ class LogServiceTest {
     @DisplayName("size가 0이면 기본값 20으로 검색한다")
     void searchLogs_usesDefaultSizeWhenZero() {
         // given
-        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, null, null, 0, 0);
-        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, null, null, null, 0);
+        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), false));
+        given(logRepository.countWithLimit(any(SearchLogsCondition.class), anyInt())).willReturn(0L);
 
         // when
         logService.searchLogs(req);
@@ -185,8 +189,9 @@ class LogServiceTest {
     @DisplayName("size가 0이 아니면 요청한 size를 그대로 사용한다")
     void searchLogs_usesRequestedSize() {
         // given
-        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, null, null, 0, 50);
-        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, null, null, null, 50);
+        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), false));
+        given(logRepository.countWithLimit(any(SearchLogsCondition.class), anyInt())).willReturn(0L);
 
         // when
         logService.searchLogs(req);
@@ -200,18 +205,19 @@ class LogServiceTest {
     }
 
     @Test
-    @DisplayName("검색 결과가 없으면 빈 목록과 totalCount 0을 반환한다")
+    @DisplayName("검색 결과가 없으면 빈 목록과 estimatedCount 0을 반환한다")
     void searchLogs_returnsEmptyWhenNoResults() {
         // given
-        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, LogLevel.TRACE, "nonexistent", 0, 10);
-        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(1L), null, List.of(LogLevel.TRACE), "nonexistent", null, 10);
+        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), false));
+        given(logRepository.countWithLimit(any(SearchLogsCondition.class), anyInt())).willReturn(0L);
 
         // when
         SearchLogsDto.Res res = logService.searchLogs(req);
 
         // then
         assertThat(res.logs()).isEmpty();
-        assertThat(res.totalCount()).isEqualTo(0L);
+        assertThat(res.estimatedCount()).isEqualTo(0L);
     }
 
     @Test
@@ -219,8 +225,9 @@ class LogServiceTest {
     void searchLogs_convertsReqToConditionCorrectly() {
         // given
         TimeRangeVo timeRange = new TimeRangeVo(Instant.parse("2025-06-01T00:00:00Z"), Instant.parse("2025-06-30T23:59:59Z"));
-        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(5L), timeRange, LogLevel.WARN, "timeout", 2, 30);
-        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), 0L));
+        SearchLogsDto.Req req = new SearchLogsDto.Req(List.of(5L), timeRange, List.of(LogLevel.WARN), "timeout", 100L, 30);
+        given(logRepository.search(any(SearchLogsCondition.class))).willReturn(new SearchLogsResult(Collections.emptyList(), false));
+        given(logRepository.countWithLimit(any(SearchLogsCondition.class), anyInt())).willReturn(0L);
 
         // when
         logService.searchLogs(req);
@@ -232,9 +239,9 @@ class LogServiceTest {
         SearchLogsCondition condition = captor.getValue();
         assertThat(condition.appIds()).isEqualTo(List.of(5L));
         assertThat(condition.timeRange()).isEqualTo(timeRange);
-        assertThat(condition.logLevel()).isEqualTo(LogLevel.WARN);
+        assertThat(condition.logLevels()).isEqualTo(List.of(LogLevel.WARN));
         assertThat(condition.query()).isEqualTo("timeout");
-        assertThat(condition.page()).isEqualTo(2);
+        assertThat(condition.cursorId()).isEqualTo(100L);
         assertThat(condition.size()).isEqualTo(30);
     }
 }
