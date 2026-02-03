@@ -43,7 +43,7 @@ public class CustomLogRepositoryImpl implements CustomLogRepository {
                 .from(log)
                 .join(application).on(log.appId.eq(application.id))
                 .where(searchCondition)
-                .orderBy(log.id.desc())
+                .orderBy(log.loggedAt.desc())
                 .limit(condition.size() + 1)
                 .fetch();
 
