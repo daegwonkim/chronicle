@@ -61,8 +61,8 @@ jobs:
               --restart always \
               -p 8080:8080 \
               --env-file /home/ec2-user/chronicle-api/.env \
-              -e JAVA_OPTS="-javaagent:/app/pinpoint-agent-3.0.0/pinpoint-bootstrap-3.0.0.jar \
+              -e JAVA_OPTS="-javaagent:/app/pinpoint-agent-3.0.4/pinpoint-bootstrap-3.0.4.jar \
                 -Dpinpoint.agentId=chronicle-agent \
-                -Dpinpoint.applicationName=chronicle \
+                -Dpinpoint.applicationName=chronicle-api \
                 -Dprofiler.transport.grpc.collector.ip=${{ secrets.PINPOINT_COLLECTOR_IP }}" \
               $ECR_REGISTRY/$ECR_REPOSITORY:latest
