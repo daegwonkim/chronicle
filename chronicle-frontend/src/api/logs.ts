@@ -13,16 +13,17 @@ export interface Log {
 
 export interface SearchLogsResponse {
   logs: Log[];
-  totalCount: number;
+  hasNext: boolean;
+  estimatedCount: number | null;
 }
 
 export interface SearchLogsParams {
   appIds?: number[];
   from?: string;
   to?: string;
-  logLevel?: LogLevel;
+  logLevels?: LogLevel[];
   query?: string;
-  page?: number;
+  cursorId?: number | null;
   size?: number;
 }
 
@@ -34,9 +35,11 @@ export function searchLogs(params: SearchLogsParams = {}) {
   }
   if (params.from) searchParams.set('timeRange.from', params.from);
   if (params.to) searchParams.set('timeRange.to', params.to);
-  if (params.logLevel) searchParams.set('logLevel', params.logLevel);
+  if (params.logLevels && params.logLevels.length > 0) {
+    params.logLevels.forEach((level) => searchParams.append('logLevels', level));
+  }
   if (params.query) searchParams.set('query', params.query);
-  searchParams.set('page', String(params.page ?? 0));
+  if (params.cursorId != null) searchParams.set('cursorId', String(params.cursorId));
   searchParams.set('size', String(params.size ?? 20));
 
   const qs = searchParams.toString();

@@ -26,10 +26,15 @@ export default function ProjectDashboardPage() {
   const appDropdownRef = useRef<HTMLDivElement>(null);
 
   const [logs, setLogs] = useState<Log[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(0);
+  const [cursorHistory, setCursorHistory] = useState<(number | null)[]>([null]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [estimatedCount, setEstimatedCount] = useState<number | null>(null);
 
-  const [logLevel, setLogLevel] = useState<LogLevel | ''>('');
+  const [selectedLogLevels, setSelectedLogLevels] = useState<LogLevel[]>([]);
+  const [logLevelDropdownOpen, setLogLevelDropdownOpen] = useState(false);
+  const logLevelDropdownRef = useRef<HTMLDivElement>(null);
+
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
   const [fromTime, setFromTime] = useState('');
@@ -38,8 +43,6 @@ export default function ProjectDashboardPage() {
   const [projectLoading, setProjectLoading] = useState(true);
   const [logsLoading, setLogsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   useEffect(() => {
     if (!id) return;
@@ -62,15 +65,19 @@ export default function ProjectDashboardPage() {
       if (appDropdownRef.current && !appDropdownRef.current.contains(e.target as Node)) {
         setAppDropdownOpen(false);
       }
+      if (logLevelDropdownRef.current && !logLevelDropdownRef.current.contains(e.target as Node)) {
+        setLogLevelDropdownOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = useCallback(async (cursorId: number | null, isFirstPage: boolean) => {
     if (selectedAppIds.length === 0) {
       setLogs([]);
-      setTotalCount(0);
+      setHasNext(false);
+      if (isFirstPage) setEstimatedCount(null);
       return;
     }
     setLogsLoading(true);
@@ -79,47 +86,79 @@ export default function ProjectDashboardPage() {
         appIds: selectedAppIds,
         from: fromTime ? new Date(fromTime).toISOString() : undefined,
         to: toTime ? new Date(toTime).toISOString() : undefined,
-        logLevel: logLevel || undefined,
+        logLevels: selectedLogLevels.length > 0 ? selectedLogLevels : undefined,
         query: query || undefined,
-        page,
+        cursorId,
         size: PAGE_SIZE,
       })) as SearchLogsResponse;
       setLogs(res.logs);
-      setTotalCount(res.totalCount);
+      setHasNext(res.hasNext);
+      if (isFirstPage && res.estimatedCount != null) {
+        setEstimatedCount(res.estimatedCount);
+      }
     } catch {
       setLogs([]);
-      setTotalCount(0);
+      setHasNext(false);
     } finally {
       setLogsLoading(false);
     }
-  }, [selectedAppIds, fromTime, toTime, logLevel, query, page]);
+  }, [selectedAppIds, fromTime, toTime, selectedLogLevels, query]);
 
   useEffect(() => {
     if (!projectLoading && applications.length > 0) {
-      fetchLogs();
+      const cursorId = cursorHistory[currentPage] ?? null;
+      fetchLogs(cursorId, currentPage === 0);
     }
-  }, [fetchLogs, projectLoading, applications.length]);
+  }, [fetchLogs, projectLoading, applications.length, currentPage, cursorHistory]);
+
+  function resetPagination() {
+    setCursorHistory([null]);
+    setCurrentPage(0);
+    setEstimatedCount(null);
+  }
 
   function toggleApp(appId: number) {
     setSelectedAppIds((prev) =>
       prev.includes(appId) ? prev.filter((i) => i !== appId) : [...prev, appId],
     );
-    setPage(0);
+    resetPagination();
+  }
+
+  function toggleLogLevel(level: LogLevel) {
+    setSelectedLogLevels((prev) =>
+      prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level],
+    );
+    resetPagination();
   }
 
   function handleSearch() {
     setQuery(searchInput);
-    setPage(0);
+    resetPagination();
   }
 
   function handleResetFilters() {
     setSelectedAppIds(applications.map((app) => app.id));
-    setLogLevel('');
+    setSelectedLogLevels([]);
     setSearchInput('');
     setQuery('');
     setFromTime('');
     setToTime('');
-    setPage(0);
+    resetPagination();
+  }
+
+  function handleNextPage() {
+    if (!hasNext || logs.length === 0) return;
+    const lastLogId = logs[logs.length - 1].id;
+    const newPage = currentPage + 1;
+    if (cursorHistory.length <= newPage) {
+      setCursorHistory((prev) => [...prev, lastLogId]);
+    }
+    setCurrentPage(newPage);
+  }
+
+  function handlePrevPage() {
+    if (currentPage <= 0) return;
+    setCurrentPage((p) => p - 1);
   }
 
   function formatTime(isoString: string) {
@@ -143,6 +182,18 @@ export default function ProjectDashboardPage() {
       return app?.name ?? '1개 선택';
     }
     return `${selectedAppIds.length}개 선택`;
+  }
+
+  function getLogLevelDropdownLabel() {
+    if (selectedLogLevels.length === 0) return '전체';
+    if (selectedLogLevels.length === 1) return selectedLogLevels[0];
+    return `${selectedLogLevels.length}개 선택`;
+  }
+
+  function getEstimatedCountDisplay() {
+    if (estimatedCount == null) return '';
+    if (estimatedCount > 10000) return '10,000+';
+    return estimatedCount.toLocaleString();
   }
 
   if (projectLoading) {
@@ -207,7 +258,7 @@ export default function ProjectDashboardPage() {
                           } else {
                             setSelectedAppIds(applications.map((a) => a.id));
                           }
-                          setPage(0);
+                          resetPagination();
                         }}
                       />
                       전체
@@ -238,7 +289,7 @@ export default function ProjectDashboardPage() {
                   value={fromTime}
                   onChange={(e) => {
                     setFromTime(e.target.value);
-                    setPage(0);
+                    resetPagination();
                   }}
                 />
                 <span className="time-sep">~</span>
@@ -247,27 +298,48 @@ export default function ProjectDashboardPage() {
                   value={toTime}
                   onChange={(e) => {
                     setToTime(e.target.value);
-                    setPage(0);
+                    resetPagination();
                   }}
                 />
               </div>
             </div>
 
-            <div className="filter-section">
+            <div className="filter-section" ref={logLevelDropdownRef}>
               <label className="filter-label">로그 레벨</label>
-              <select
-                className="filter-select"
-                value={logLevel}
-                onChange={(e) => {
-                  setLogLevel(e.target.value as LogLevel | '');
-                  setPage(0);
-                }}
-              >
-                <option value="">전체</option>
-                {LOG_LEVELS.map((level) => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
+              <div className="dropdown-wrapper">
+                <button
+                  className="filter-select dropdown-trigger"
+                  onClick={() => setLogLevelDropdownOpen((v) => !v)}
+                >
+                  {getLogLevelDropdownLabel()}
+                  <span className="dropdown-arrow">{logLevelDropdownOpen ? '▲' : '▼'}</span>
+                </button>
+                {logLevelDropdownOpen && (
+                  <div className="dropdown-menu">
+                    <label className="dropdown-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedLogLevels.length === 0}
+                        onChange={() => {
+                          setSelectedLogLevels([]);
+                          resetPagination();
+                        }}
+                      />
+                      전체
+                    </label>
+                    {LOG_LEVELS.map((level) => (
+                      <label key={level} className="dropdown-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedLogLevels.includes(level)}
+                          onChange={() => toggleLogLevel(level)}
+                        />
+                        {level}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="filter-section filter-grow">
@@ -330,25 +402,26 @@ export default function ProjectDashboardPage() {
           )}
         </div>
 
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              className="btn-page"
-              disabled={page === 0}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              이전
-            </button>
-            <span className="page-info">{page + 1} / {totalPages}</span>
-            <button
-              className="btn-page"
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              다음
-            </button>
-          </div>
-        )}
+        <div className="pagination">
+          <button
+            className="btn-page"
+            disabled={currentPage === 0}
+            onClick={handlePrevPage}
+          >
+            이전
+          </button>
+          <span className="page-info">
+            {currentPage + 1} 페이지
+            {estimatedCount != null && ` (총 ${getEstimatedCountDisplay()}건)`}
+          </span>
+          <button
+            className="btn-page"
+            disabled={!hasNext}
+            onClick={handleNextPage}
+          >
+            다음
+          </button>
+        </div>
       </div>
     </div>
   );
