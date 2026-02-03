@@ -1,38 +1,48 @@
 name: Deploy to EC2
+
 on:
   push:
     branches: [ main ]
     paths:
       - 'backend/**'
+
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: chronicle
   CONTAINER_NAME: chronicle-api
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: ./backend
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+
       - name: Build with Gradle
         run: ./gradlew :chronicle-api:clean :chronicle-api:build -x test
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
       - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -42,27 +52,21 @@ jobs:
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: ECR_REGISTRY,ECR_REPOSITORY,CONTAINER_NAME
           script: |
-            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
-            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
-            docker stop $CONTAINER_NAME || true
-            docker rm $CONTAINER_NAME || true
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
             docker run -d \
-              --name $CONTAINER_NAME \
+              --name ${{ env.CONTAINER_NAME }} \
               --restart always \
               -p 8080:8080 \
               --env-file /home/ec2-user/chronicle-api/.env \
-              -e JAVA_OPTS="-javaagent:/app/pinpoint-agent-3.0.4/pinpoint-bootstrap-3.0.4.jar \
-                -Dpinpoint.agentId=chronicle-agent \
-                -Dpinpoint.applicationName=chronicle-api \
-                -Dprofiler.transport.grpc.collector.ip=${{ secrets.PINPOINT_COLLECTOR_IP }}" \
-              $ECR_REGISTRY/$ECR_REPOSITORY:latest
+              ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
